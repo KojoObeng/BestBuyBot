@@ -4,15 +4,19 @@ const pptr = require('puppeteer-core');
 var HTMLParser = require('node-html-parser');
 var nodemailer = require('nodemailer');
 var nodeoutlook = require('nodejs-nodemailer-outlook')
+var http = require('http');
+var https = require('https');
 
 require('dotenv').config()
-var checkInterval = setInterval(checkStatus, 3000)
-
+http.globalAgent.maxSockets = 1;
+https.globalAgent.maxSockets = 1;
 
 const url_test = 'https://www.bestbuy.ca/en-ca/product/apple-apple-lightning-to-3-5mm-headphone-jack-adapter-mmx62am-a/10487473';
 const url_3070 = 'https://www.bestbuy.ca/en-ca/product/nvidia-geforce-rtx-3070-8gb-gddr6-video-card-only-at-best-buy/15078017';
 const url_cart = 'https://www.bestbuy.ca/en-ca/basket'
 const url_paypal = "https://www.bestbuy.ca/checkout/?qit=1#/en-ca/shipping/ON/M2N?expressPaypalCheckout=true"
+
+var checkInterval = setInterval(() => {checkStatus(url_3070)}, 5000);
 
 chromeOptions = {
   headless: false,
@@ -42,24 +46,43 @@ var mailOptions = {
   text: url_test
 };
 
-function checkStatus () {
+
+
+async function checkStatus (curr_url) {
   clearInterval(checkInterval)
-  rp(url_test).then((html) => {
-    var root = HTMLParser.parse(html)
-    const availability_text = root.querySelector(".shippingAvailability_2RMa1").textContent
-    if (availability_text != "Coming soon") {
-      // sendEmail()
-      openBrowser()
-      
+
+  var searchOptions = {
+    uri: curr_url,
+    headers: {
+      'Connection': 'keep-alive',
+      'Accept-Encoding': '',
+      'Accept-Language': 'en-US,en;q=0.8'
     }
+  }
+
+  await rp(searchOptions)
+  .then((html) => {
+    var root = HTMLParser.parse(html)
+    var availability_text = root.querySelector(".shippingAvailability_2RMa1").textContent
+    console.log(availability_text)
+    if (availability_text != "Coming soon") {
+      sendEmail(curr_url)
+      openBrowser(curr_url)
+    }
+    else {
+      var checkInterval = setInterval(() => {checkStatus(url_3070)}, 3000);
+    }
+  })
+  .catch((error) => {
+    console.log(error)
   })
 }
 
 
-async function openBrowser () {
+async function openBrowser (curr_url) {
   const browser = await pptr.connect(chromeOptions);
   const page = await browser.newPage();
-  await page.goto(url_test);
+  await page.goto(curr_url);
   var cookies = await page.cookies()
 
   for (cookie of cookies) {
@@ -73,7 +96,7 @@ async function openBrowser () {
 
   await page.focus("#test > button")
   await page.keyboard.type('\n');
-  await page.waitForTimeout(3000)
+  await page.waitForTimeout(5000)
   await page.goto(url_cart);
   // const response = await page.goto("https://www.bestbuy.ca/checkout/?qit=1#/en-ca/shipping/ON/M2N?expressPaypalCheckout=true");
   const reponse = await page.goto("https://www.bestbuy.ca/identity/global/signin?redirectUrl=https%3A%2F%2Fwww.bestbuy.ca%2Fcheckout%2F%3Fqit%3D1%23%2Fen-ca%2Fshipping%2FON%2FL6W&amp;lang=en-CA&amp;contextId=checkout")
@@ -107,7 +130,9 @@ async function openBrowser () {
   // await page.click("#test > button")
 }
 
-const sendEmail = async () => {
+const sendEmail = async (curr_url) => {
+  clearInterval(checkInterval)
+  mailOptions.text = curr_url; 
   let info = await transporter.sendMail(mailOptions, function(error, info){
     if (error) {
       console.log(error);
