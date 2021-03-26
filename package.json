@@ -6,6 +6,8 @@
   "dependencies": {
     "dotenv": "^8.2.0",
     "node-html-parser": "^3.1.0",
+    "nodejs-nodemailer-outlook": "^1.2.3",
+    "nodemailer": "^6.5.0",
     "puppeteer": "^8.0.0",
     "puppeteer-core": "^8.0.0",
     "request": "^2.88.2",
