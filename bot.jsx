@@ -22,32 +22,25 @@ chromeOptions = {
 }
 
 var transporter = nodemailer.createTransport({
-  // host: "smtp-mail.outlook.com", // hostname
-  // secureConnection: false, // TLS requires secureConnection to be false
-  // port: 587, // port for secure SMTP
-  // tls: {
-  //    ciphers:'SSLv3'
-  // },
   host: 'smtp-mail.outlook.com',
   port: 587,
   secureConnection: false,
   tls: {
      ciphers:'SSLv3'
+  }, 
+  auth: {
+    user: process.env.EMAIL,
+    pass: process.env.PASSWORD
   }
 });
 
 
-
-
 var mailOptions = {
-  from: process.env.USERNAME,
-  to: process.env.USERNAME,
+  from: process.env.EMAIL,
+  to: process.env.EMAIL,
   subject: '3070 is in stock',
   text: url_test
 };
-
-
-console.log(process.env.USERNAME)
 
 function checkStatus () {
   clearInterval(checkInterval)
@@ -55,8 +48,8 @@ function checkStatus () {
     var root = HTMLParser.parse(html)
     const availability_text = root.querySelector(".shippingAvailability_2RMa1").textContent
     if (availability_text != "Coming soon") {
-      sendEmail()
-      //openBrowser()
+      // sendEmail()
+      openBrowser()
       
     }
   })
@@ -69,7 +62,7 @@ async function openBrowser () {
   await page.goto(url_test);
   var cookies = await page.cookies()
 
-  for (const cookie of cookies) {
+  for (cookie of cookies) {
     if (cookie.domain === '.bestbuy.ca' || cookie.domain === 'www.bestbuy.ca') {
       await page.deleteCookie({
         name : cookie.name,
@@ -78,17 +71,31 @@ async function openBrowser () {
     }
   }
 
+  await page.focus("#test > button")
+  await page.keyboard.type('\n');
+  await page.waitForTimeout(3000)
+  await page.goto(url_cart);
+  // const response = await page.goto("https://www.bestbuy.ca/checkout/?qit=1#/en-ca/shipping/ON/M2N?expressPaypalCheckout=true");
+  const reponse = await page.goto("https://www.bestbuy.ca/identity/global/signin?redirectUrl=https%3A%2F%2Fwww.bestbuy.ca%2Fcheckout%2F%3Fqit%3D1%23%2Fen-ca%2Fshipping%2FON%2FL6W&amp;lang=en-CA&amp;contextId=checkout")
+  await page.type('#username', process.env.EMAIL)
+  await page.type('#password', process.env.BESTBUY_PASSWORD)
+  const form = await page.$('#signIn > div > button')
+  await form.evaluate( form => form.click() )
+  await page.waitForSelector("#cvv")
+  await page.type('#cvv', process.env.CVV)
 
 
-  // await page.waitForSelector("#test > button")
-  // await page.click("#test > button")
-  // await page.waitForTimeout(1000)
-  // await page.keyboard.type('\n'); 
-  // await page.goto(url_cart);
-  // await page.goto("https://www.bestbuy.ca/checkout/?qit=1#/en-ca/shipping/ON/M2N?expressPaypalCheckout=true")
+  // await page.click('#signIn > div > button')
+  // const response = await page.goto("https://www.bestbuy.ca/checkout/?qit=1#/en-ca/payment")
+ 
+
+
   // await page.waitForSelector('#payment-submit-btn', { visible: true, timeout: 0 })
   // await page.click("#payment-submit-btn")
+   // page.waitForNavigation({
+    //   waitUntil: 'networkidle0'
 
+  
   // await page.waitForSelector("#root > div > div.x-page-content.container_3Sp8P > div.loader_3thnw > div.loadedContent_2Wp84 > section > div > section > section.cost-sum-section_3pPEp > div.checkoutOptions_1VB1L > div:nth-child(1) > div > div > a")
   // await page.click("#root > div > div.x-page-content.container_3Sp8P > div.loader_3thnw > div.loadedContent_2Wp84 > section > div > section > section.cost-sum-section_3pPEp > div.checkoutOptions_1VB1L > div:nth-child(1) > div > div > a")
   // await page.waitForSelector('#payment-submit-btn')
@@ -108,19 +115,6 @@ const sendEmail = async () => {
       console.log('Email sent: ' + info.response);
     }
   });
-
-  // nodeoutlook.sendEmail({
-  //   auth: {
-  //       user: process.env.USERNAME,
-  //       pass: process.env.PASSWORD
-  //   },
-  //   from: process.env.USERNAME,
-  //   to: process.env.USERNAME,
-  //   subject: '3070 is here',
-  //   text: 'This is text version!',
-  //   onError: (e) => console.log(e),
-  //   onSuccess: (i) => console.log(i)
-  // })
 } 
 
 
