@@ -12,15 +12,55 @@ http.globalAgent.maxSockets = 1;
 https.globalAgent.maxSockets = 1;
 
 const url_test = 'https://www.bestbuy.ca/en-ca/product/apple-apple-lightning-to-3-5mm-headphone-jack-adapter-mmx62am-a/10487473';
+
+const url_PS5 = 'https://www.bestbuy.ca/en-ca/product/playstation-5-digital-edition-console-online-only/14962184';
+const url_3060_ASUS_ROG = 'https://www.bestbuy.ca/en-ca/product/asus-rog-strix-geforce-rtx-3060-oc-12gb-gddr6x-video-card/15309514';
+const url_3060_ASUS_TUF = 'https://www.bestbuy.ca/en-ca/product/asus-tuf-gaming-geforce-rtx-3060-oc-12gb-gddr6x-video-card/15309513';
+const url_3060_EVGA = 'https://www.bestbuy.ca/en-ca/product/evga-nvidia-geforce-rtx-3060-xc-12gb-dddr6-video-card/15318940';
+const url_3060_MSI = 'https://www.bestbuy.ca/en-ca/product/msi-nvidia-geforce-rtx-3060-ventus-3x-12gb-gddr6-video-card/15324508';
+const url_3060_ZOTAC = 'https://www.bestbuy.ca/en-ca/product/zotac-nvidia-geforce-rtx-3060-twin-edge-12gb-gddr6-video-card/15309504';
 const url_3060TI_NVIDIA = 'https://www.bestbuy.ca/en-ca/product/nvidia-geforce-rtx-3060-ti-8gb-gddr6-video-card/15166285'
-const url_3070_NVIDIA = 'https://www.bestbuy.ca/en-ca/product/nvidia-geforce-rtx-3070-8gb-gddr6-video-card-only-at-best-buy/15078017';
+const url_3070_ASUS_TUF = 'https://www.bestbuy.ca/en-ca/product/asus-tuf-gaming-nvidia-geforce-rtx-3070-2x-oc-8gb-gddr6-video-card/15053087';
 const url_3070_EVGA = 'https://www.bestbuy.ca/en-ca/product/evga-geforce-rtx-3070-xc3-ultra-8gb-gddr6-video-card/15147122';
-const url_3070_ZOTAC = 'https://www.bestbuy.ca/en-ca/product/zotac-nvidia-geforce-rtx-3070-twin-edge-8gb-gddr6x-video-card/15000079';
-const url_3070_ASUS = 'https://www.bestbuy.ca/en-ca/product/asus-tuf-gaming-nvidia-geforce-rtx-3070-2x-oc-8gb-gddr6-video-card/15053087';
 const url_3070_MSI = 'https://www.bestbuy.ca/en-ca/product/msi-nvidia-geforce-rtx-3070-ventus-3x-oc-8gb-gddr6-video-card/15038016';
+const url_3070_NVIDIA = 'https://www.bestbuy.ca/en-ca/product/nvidia-geforce-rtx-3070-8gb-gddr6-video-card-only-at-best-buy/15078017';
+const url_3070_ZOTAC = 'https://www.bestbuy.ca/en-ca/product/zotac-nvidia-geforce-rtx-3070-twin-edge-8gb-gddr6x-video-card/15000079';
 const url_3070_ZOTAC_OC = 'https://www.bestbuy.ca/en-ca/product/zotac-nvidia-geforce-rtx-3070-twin-edge-oc-8gb-gddr6x-video-card/15000078';
+const url_3080_ASUS_ROG = 'https://www.bestbuy.ca/en-ca/product/asus-rog-strix-nvidia-geforce-rtx-3080-10gb-gddr6x-video-card/14954116';
+const url_3080_ASUS_TUF = 'https://www.bestbuy.ca/en-ca/product/asus-tuf-gaming-nvidia-geforce-rtx-3080-10gb-gddr6x-video-card/14953248';
+const url_3080_EVGA = 'https://www.bestbuy.ca/en-ca/product/evga-geforce-rtx-3080-xc3-ultra-gaming-10gb-gddr6x-video-card/15084753';
+const url_3080_MSI = 'https://www.bestbuy.ca/en-ca/product/msi-nvidia-geforce-rtx-3080-ventus-3x-10gb-gddr6x-video-card/14950588';
+const url_3080_ZOTAC = 'https://www.bestbuy.ca/en-ca/product/zotac-nvidia-geforce-rtx-3080-trinity-10gb-gddr6x-video-card/14953249';
+const url_3080_ZOTAC_OC = 'https://www.bestbuy.ca/en-ca/product/zotac-nvidia-geforce-rtx-3080-trinity-oc-10gb-gddr6x-video-card/15000077';
+
 const url_cart = 'https://www.bestbuy.ca/en-ca/basket'
 const url_paypal = "https://www.bestbuy.ca/checkout/?qit=1#/en-ca/shipping/ON/M2N?expressPaypalCheckout=true"
+
+
+const names =  {
+  '14962184': 'Digital PS5',
+  '15309514': '3060 ASUS ROG',
+  '15309513': '3060 ASUS TUF',
+  '15318940': '3060 EVGA', 
+  '15324508': '3060 MSI', 
+  '15309504': '3060 ZOTAC', 
+  '15166285': '3060TI NVIDIA',
+  '15053087': '3070 ASUS TUF',
+  '15147122': '3070 EVGA', 
+  '15038016': '3070 MSI', 
+  '15078017': '3070 NVIDIA',
+  '15000079': '3070 ZOTAC',
+  '15000078': '3070 ZOTAC OC',
+  '14954116': '3080 ASUS ROG',
+  '14953248': '3080 ASUS TUF',
+  '15084753': '3080 EVGA', 
+  '14950588': '3080 MSI', 
+  '14953249': '3080 ZOTAC',
+  '15000077': '3080 ZOTAC OC',
+  '10487473': 'TEST ITEM'
+}
+
+
 
 
 
@@ -48,7 +88,7 @@ var transporter = nodemailer.createTransport({
 var mailOptions = {
   from: process.env.EMAIL,
   to: process.env.EMAIL,
-  subject: '3070 is in stock',
+  subject: 'GPU is in stock',
   text: url_test
 };
 
@@ -78,9 +118,8 @@ async function checkStatus (curr_url) {
   .then((html) => {
     var root = HTMLParser.parse(html)
     var availability_text = root.querySelector(".shippingAvailability_2RMa1").textContent
-    var gpu_type = curr_url.split("/")[5].split("-", 6)
-    console.log(gpu_type[3] + "-"  + gpu_type[4] + '  -------   ' + availability_text)
-
+    var gpu_type = names[curr_url.split("/")[6]]
+    console.log(gpu_type +  '  -------   ' + availability_text)
     if (availability_text != "Coming soon" && availability_text != "Sold out online")   {
       sendEmail(curr_url)
       openBrowser(curr_url)
@@ -140,6 +179,8 @@ async function openBrowser (curr_url) {
 }
 
 const sendEmail = async (curr_url) => {
+
+  mailOptions.subject = names[curr_url.split("/")[6]] + " IS HERE."
   mailOptions.text = curr_url; 
   let info = await transporter.sendMail(mailOptions, function(error, info){
     if (error) {
@@ -150,8 +191,23 @@ const sendEmail = async (curr_url) => {
   });
 } 
 
-
-
-intervalManager(true, url_3070_NVIDIA, 3000)
+intervalManager(true, url_3060_ASUS_ROG, 3000)
+intervalManager(true, url_3060_ASUS_TUF, 3000)
+intervalManager(true, url_3060_EVGA, 3000)
+intervalManager(true, url_3060_MSI, 3000)
+intervalManager(true, url_3060_ZOTAC, 3000)
 intervalManager(true, url_3060TI_NVIDIA, 3000)
+intervalManager(true, url_3070_ASUS_TUF, 3000)
+intervalManager(true, url_3070_EVGA, 3000)
+intervalManager(true, url_3070_NVIDIA, 3000)
+intervalManager(true, url_3070_MSI, 3000)
+intervalManager(true, url_3070_ZOTAC, 3000)
+intervalManager(true, url_3070_ZOTAC_OC, 3000)
+intervalManager(true, url_3080_ASUS_ROG, 3000)
+intervalManager(true, url_3080_ASUS_TUF, 3000)
+intervalManager(true, url_3080_EVGA, 3000)
+intervalManager(true, url_3080_MSI, 3000)
+intervalManager(true, url_3080_ZOTAC, 3000)
+intervalManager(true, url_3080_ZOTAC_OC, 3000)
+intervalManager(true, url_PS5, 3000)
 intervalManager(true, url_test, 3000)
