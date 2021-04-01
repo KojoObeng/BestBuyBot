@@ -11,15 +11,24 @@ require('dotenv').config()
 http.globalAgent.maxSockets = 1;
 https.globalAgent.maxSockets = 1;
 
+// localhost:9222/json/version
+
 const url_test = 'https://www.bestbuy.ca/en-ca/product/apple-apple-lightning-to-3-5mm-headphone-jack-adapter-mmx62am-a/10487473';
 
 const url_PS5 = 'https://www.bestbuy.ca/en-ca/product/playstation-5-digital-edition-console-online-only/14962184';
 const url_3060_ASUS_ROG = 'https://www.bestbuy.ca/en-ca/product/asus-rog-strix-geforce-rtx-3060-oc-12gb-gddr6x-video-card/15309514';
 const url_3060_ASUS_TUF = 'https://www.bestbuy.ca/en-ca/product/asus-tuf-gaming-geforce-rtx-3060-oc-12gb-gddr6x-video-card/15309513';
 const url_3060_EVGA = 'https://www.bestbuy.ca/en-ca/product/evga-nvidia-geforce-rtx-3060-xc-12gb-dddr6-video-card/15318940';
-const url_3060_MSI = 'https://www.bestbuy.ca/en-ca/product/msi-nvidia-geforce-rtx-3060-ventus-3x-12gb-gddr6-video-card/15324508';
+const url_3060_MSI_VENTUS2X = 'https://www.bestbuy.ca/en-ca/product/msi-nvidia-geforce-rtx-3060-ventus-2x-oc-12gb-gddr6-video-card/15317226';
+const url_3060_MSI_VENTUS3X = 'https://www.bestbuy.ca/en-ca/product/msi-nvidia-geforce-rtx-3060-ventus-3x-12gb-gddr6-video-card/15324508';
 const url_3060_ZOTAC = 'https://www.bestbuy.ca/en-ca/product/zotac-nvidia-geforce-rtx-3060-twin-edge-12gb-gddr6-video-card/15309504';
+const url_3060_ZOTAC_OC = 'https://www.bestbuy.ca/en-ca/product/zotac-nvidia-geforce-rtx-3060-twin-edge-oc-12gb-gddr6-video-card/15309503'
+const url_3060TI_EVGA = 'https://www.bestbuy.ca/en-ca/product/evga-nvidia-geforce-rtx-3060-ti-ftw3-ultra-8gb-gddr6-video-card/15229237';
+const url_3060TI_MSI = 'https://www.bestbuy.ca/en-ca/product/msi-nvidia-geforce-rtx-3060-ti-ventus-2x-oc-8gb-gddr6-video-card/15178453';
+const url_3060TI_ZOTAC = 'https://www.bestbuy.ca/en-ca/product/zotac-geforce-rtx-3060-ti-twin-edge-oc-8gb-gddr6-video-card/15178452';
 const url_3060TI_NVIDIA = 'https://www.bestbuy.ca/en-ca/product/nvidia-geforce-rtx-3060-ti-8gb-gddr6-video-card/15166285'
+const url_3070_ASUS_DUAL = 'https://www.bestbuy.ca/en-ca/product/asus-rog-strix-nvidia-geforce-rtx-3070-oc-8gb-gddr6-video-card/15053085';
+const url_3070_ASUS_ROG = 'https://www.bestbuy.ca/en-ca/product/asus-dual-nvidia-geforce-rtx-3070-2x-oc-8gb-gddr6-video-card/15053086';
 const url_3070_ASUS_TUF = 'https://www.bestbuy.ca/en-ca/product/asus-tuf-gaming-nvidia-geforce-rtx-3070-2x-oc-8gb-gddr6-video-card/15053087';
 const url_3070_EVGA = 'https://www.bestbuy.ca/en-ca/product/evga-geforce-rtx-3070-xc3-ultra-8gb-gddr6-video-card/15147122';
 const url_3070_MSI = 'https://www.bestbuy.ca/en-ca/product/msi-nvidia-geforce-rtx-3070-ventus-3x-oc-8gb-gddr6-video-card/15038016';
@@ -42,9 +51,16 @@ const names =  {
   '15309514': '3060 ASUS ROG',
   '15309513': '3060 ASUS TUF',
   '15318940': '3060 EVGA', 
-  '15324508': '3060 MSI', 
-  '15309504': '3060 ZOTAC', 
+  '15317226': '3060 MSI VENTUS 2x',
+  '15324508': '3060 MSI VENTUS 3x', 
+  '15309504': '3060 ZOTAC',
+  '15309503': '3060 ZOTAC OC',
+  '15229237': '3060TI EVGA',
+  '15178453': '3060TI MSI',
   '15166285': '3060TI NVIDIA',
+  '15178452': '3060TI ZOTAC',
+  '15053085': '3070 ASUS DUAL',
+  '15053086': '3070 ASUS ROG',
   '15053087': '3070 ASUS TUF',
   '15147122': '3070 EVGA', 
   '15038016': '3070 MSI', 
@@ -54,14 +70,11 @@ const names =  {
   '14954116': '3080 ASUS ROG',
   '14953248': '3080 ASUS TUF',
   '15084753': '3080 EVGA', 
-  '14950588': '3080 MSI', 
+  '14950588': '3080 MSI',
   '14953249': '3080 ZOTAC',
   '15000077': '3080 ZOTAC OC',
   '10487473': 'TEST ITEM'
 }
-
-
-
 
 
 var chromeOptions = {
@@ -119,8 +132,11 @@ async function checkStatus (curr_url) {
     var root = HTMLParser.parse(html)
     var availability_text = root.querySelector(".shippingAvailability_2RMa1").textContent
     var gpu_type = names[curr_url.split("/")[6]]
+    const is_disabled = root.querySelector('#test > button').classList.contains("disabled_LqxUL")
+    const is_available = !(["Coming soon", "Sold out online"].includes(availability_text))
     console.log(gpu_type +  '  -------   ' + availability_text)
-    if (availability_text != "Coming soon" && availability_text != "Sold out online")   {
+
+    if (!(is_disabled) || is_available)   {
       sendEmail(curr_url)
       openBrowser(curr_url)
     }
@@ -130,6 +146,7 @@ async function checkStatus (curr_url) {
   })
   .catch((error) => {
     console.log(error)
+    intervalManager(true, curr_url, 3000)
   })
 }
 
@@ -157,10 +174,14 @@ async function openBrowser (curr_url) {
   const reponse = await page.goto("https://www.bestbuy.ca/identity/global/signin?redirectUrl=https%3A%2F%2Fwww.bestbuy.ca%2Fcheckout%2F%3Fqit%3D1%23%2Fen-ca%2Fshipping%2FON%2FL6W&amp;lang=en-CA&amp;contextId=checkout")
   await page.type('#username', process.env.EMAIL)
   await page.type('#password', process.env.BESTBUY_PASSWORD)
-  const form = await page.$('#signIn > div > button')
-  await form.evaluate( form => form.click() )
+  const signIn = await page.$('#signIn > div > button')
+  await signIn.evaluate( signIn => signIn.click() )
   await page.waitForSelector("#cvv")
   await page.type('#cvv', process.env.CVV)
+
+  // SIGN IN, BECAREFUL WHEN UNCOMMENTING
+  const placeOrder = await page.$('#posElement > section > section.cost-sum-section > button')
+  await placeOrder.evaluate( placeOrder => placeOrder.click())
 
  // Paypal
   // await page.click('#signIn > div > button')
@@ -194,9 +215,16 @@ const sendEmail = async (curr_url) => {
 intervalManager(true, url_3060_ASUS_ROG, 3000)
 intervalManager(true, url_3060_ASUS_TUF, 3000)
 intervalManager(true, url_3060_EVGA, 3000)
-intervalManager(true, url_3060_MSI, 3000)
+intervalManager(true, url_3060_MSI_VENTUS2X, 3000)
+intervalManager(true, url_3060_MSI_VENTUS3X, 3000)
 intervalManager(true, url_3060_ZOTAC, 3000)
+intervalManager(true, url_3060_ZOTAC_OC, 3000)
+intervalManager(true, url_3060TI_EVGA, 3000)
+intervalManager(true, url_3060TI_MSI, 3000)
 intervalManager(true, url_3060TI_NVIDIA, 3000)
+intervalManager(true, url_3060TI_ZOTAC, 3000)
+intervalManager(true, url_3070_ASUS_DUAL, 3000)
+intervalManager(true, url_3070_ASUS_ROG, 3000)
 intervalManager(true, url_3070_ASUS_TUF, 3000)
 intervalManager(true, url_3070_EVGA, 3000)
 intervalManager(true, url_3070_NVIDIA, 3000)
@@ -210,4 +238,5 @@ intervalManager(true, url_3080_MSI, 3000)
 intervalManager(true, url_3080_ZOTAC, 3000)
 intervalManager(true, url_3080_ZOTAC_OC, 3000)
 intervalManager(true, url_PS5, 3000)
-intervalManager(true, url_test, 3000)
+
+// intervalManager(true, url_test, 3000)
