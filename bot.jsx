@@ -110,13 +110,13 @@ var mailOptions = {
 function intervalManager(flag, link, time=3000) {
   var interval_id = link + "-interval"
 
-  if (flag) global[interval_id] = setInterval(() => {checkStatus(link)}, time)
+  if (flag) global[interval_id] = setInterval(() => {checkStatus(link, time)}, time)
   else {
     clearInterval(global[interval_id])
   }
 }
 
-async function checkStatus (curr_url) {
+async function checkStatus (curr_url, interval_length) {
   intervalManager(false, curr_url)
 
   var searchOptions = {
@@ -156,12 +156,12 @@ async function checkStatus (curr_url) {
         openBrowser(curr_url)
       }
       else {
-        intervalManager(true, curr_url, 3000)
+        intervalManager(true, curr_url, interval_length)
       }
     })
     .catch((error) => {
       console.log(error)
-      // intervalManager(true, curr_url, 3000)
+      // intervalManager(true, curr_url, invterval_length)
     })
   }
 
@@ -179,9 +179,11 @@ async function checkStatus (curr_url) {
       sendEmail(curr_url)
       openBrowser(curr_url)
     }
+    else {
+      intervalManager(true, curr_url, interval_length)
+    }
 
-    intervalManager(true, curr_url, 3000)
-    
+
   })
   // check_page(curr_url)
 
@@ -217,8 +219,8 @@ async function openBrowser (curr_url) {
   await page.type('#cvv', process.env.CVV)
 
   // SIGN IN, BECAREFUL WHEN UNCOMMENTING
-  const placeOrder = await page.$('#posElement > section > section.cost-sum-section > button')
-  await placeOrder.evaluate( placeOrder => placeOrder.click())
+  // const placeOrder = await page.$('#posElement > section > section.cost-sum-section > button')
+  // await placeOrder.evaluate( placeOrder => placeOrder.click())
 }
 
 const sendEmail = async (curr_url) => {
@@ -234,34 +236,36 @@ const sendEmail = async (curr_url) => {
   });
 } 
 
-intervalManager(true, url_3060_ASUS_ROG, 3000)
-intervalManager(true, url_3060_ASUS_TUF, 3000)
-intervalManager(true, url_3060_EVGA, 3000)
-intervalManager(true, url_3060_MSI_VENTUS2X, 3000)
-intervalManager(true, url_3060_MSI_VENTUS3X, 3000)
-intervalManager(true, url_3060_ZOTAC, 3000)
-intervalManager(true, url_3060_ZOTAC_OC, 3000)
-intervalManager(true, url_3060TI_EVGA, 3000)
-intervalManager(true, url_3060TI_MSI, 3000)
-intervalManager(true, url_3060TI_NVIDIA, 3000)
-intervalManager(true, url_3060TI_ZOTAC, 3000)
-intervalManager(true, url_3070_ASUS_DUAL, 3000)
-intervalManager(true, url_3070_ASUS_ROG, 3000)
-intervalManager(true, url_3070_ASUS_TUF, 3000)
-intervalManager(true, url_3070_EVGA, 3000)
-intervalManager(true, url_3070_NVIDIA, 3000)
-intervalManager(true, url_3070_MSI, 3000)
-intervalManager(true, url_3070_ZOTAC, 3000)
-intervalManager(true, url_3070_ZOTAC_OC, 3000)
-intervalManager(true, url_3080_ASUS_ROG, 3000)
-intervalManager(true, url_3080_ASUS_TUF, 3000)
-intervalManager(true, url_3080_EVGA, 3000)
-intervalManager(true, url_3080_MSI, 3000)
-intervalManager(true, url_3080_ZOTAC, 3000)
-intervalManager(true, url_3080_ZOTAC_OC, 3000)
-intervalManager(true, url_PS5, 3000)
+const interval_length = 2500
 
-// intervalManager(true, url_test, 3000)
+intervalManager(true, url_3060_ASUS_ROG, interval_length)
+intervalManager(true, url_3060_ASUS_TUF, interval_length)
+intervalManager(true, url_3060_EVGA, interval_length)
+intervalManager(true, url_3060_MSI_VENTUS2X, interval_length)
+intervalManager(true, url_3060_MSI_VENTUS3X, interval_length)
+intervalManager(true, url_3060_ZOTAC, interval_length)
+intervalManager(true, url_3060_ZOTAC_OC, interval_length)
+intervalManager(true, url_3060TI_EVGA, interval_length)
+intervalManager(true, url_3060TI_MSI, interval_length)
+intervalManager(true, url_3060TI_NVIDIA, interval_length)
+intervalManager(true, url_3060TI_ZOTAC, interval_length)
+intervalManager(true, url_3070_ASUS_DUAL, interval_length)
+intervalManager(true, url_3070_ASUS_ROG, interval_length)
+intervalManager(true, url_3070_ASUS_TUF, interval_length)
+intervalManager(true, url_3070_EVGA, interval_length)
+intervalManager(true, url_3070_NVIDIA, interval_length)
+intervalManager(true, url_3070_MSI, interval_length)
+intervalManager(true, url_3070_ZOTAC, interval_length)
+intervalManager(true, url_3070_ZOTAC_OC, interval_length)
+intervalManager(true, url_3080_ASUS_ROG, interval_length)
+intervalManager(true, url_3080_ASUS_TUF, interval_length)
+intervalManager(true, url_3080_EVGA, interval_length)
+intervalManager(true, url_3080_MSI, interval_length)
+intervalManager(true, url_3080_ZOTAC, interval_length)
+intervalManager(true, url_3080_ZOTAC_OC, interval_length)
+intervalManager(true, url_PS5, interval_length)
+
+//intervalManager(true, url_test, interval)
 
 
 
