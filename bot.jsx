@@ -4,6 +4,7 @@ const pptr = require('puppeteer-core');
 var HTMLParser = require('node-html-parser');
 var nodemailer = require('nodemailer');
 var nodeoutlook = require('nodejs-nodemailer-outlook')
+const axios = require('axios');
 var http = require('http');
 var https = require('https');
 
@@ -44,6 +45,7 @@ const url_3080_ZOTAC_OC = 'https://www.bestbuy.ca/en-ca/product/zotac-nvidia-gef
 
 const url_cart = 'https://www.bestbuy.ca/en-ca/basket'
 const url_paypal = "https://www.bestbuy.ca/checkout/?qit=1#/en-ca/shipping/ON/M2N?expressPaypalCheckout=true"
+const url_api = 'http://api.bestbuy.ca/availability/products?callback=apiAvailability&accept-language=en&accept=application%2Fvnd.bestbuy.standardproduct.v1%2Bjson&maxlos=3&'
 
 
 const names =  {
@@ -115,7 +117,6 @@ function intervalManager(flag, link, time=3000) {
 }
 
 async function checkStatus (curr_url) {
-
   intervalManager(false, curr_url)
 
   var searchOptions = {
@@ -127,27 +128,63 @@ async function checkStatus (curr_url) {
     }
   }
 
-  await rp(searchOptions)
-  .then((html) => {
-    var root = HTMLParser.parse(html)
-    var availability_text = root.querySelector(".shippingAvailability_2RMa1").textContent
-    var gpu_type = names[curr_url.split("/")[6]]
-    const is_disabled = root.querySelector('#test > button').classList.contains("disabled_LqxUL")
-    const is_available = !(["Coming soon", "Sold out online"].includes(availability_text))
-    console.log(gpu_type +  '  -------   ' + availability_text)
+  function check_api (curr_url) {
+    return axios.get(url_api + 'skus=' + curr_url.split("/")[6]).then(
+      (response) => {
+        var availability_string = JSON.parse(response.data.replace('apiAvailability(', '').replace(');', ""))
+        return {
+          api_status: availability_string.availabilities[0].shipping.status,
+          api_quantity: availability_string.availabilities[0].shipping.quantityRemaining,
+          api_purchasable: availability_string.availabilities[0].shipping.purchasable
+        }
+      }
+    )
+  }
 
-    if (!(is_disabled) || is_available)   {
+  async function check_page (curr_url) {
+    await rp(searchOptions)
+    .then((html) => {
+      var root = HTMLParser.parse(html)
+      var availability_text = root.querySelector(".shippingAvailability_2RMa1").textContent
+      var gpu_type = names[curr_url.split("/")[6]]
+      const is_disabled = root.querySelector('#test > button').classList.contains("disabled_LqxUL")
+      const is_available = !(["Coming soon", "Sold out online"].includes(availability_text))
+      console.log(gpu_type +  '  -------   ' + availability_text)
+
+      if (!(is_disabled) || is_available)   {
+        sendEmail(curr_url)
+        openBrowser(curr_url)
+      }
+      else {
+        intervalManager(true, curr_url, 3000)
+      }
+    })
+    .catch((error) => {
+      console.log(error)
+      // intervalManager(true, curr_url, 3000)
+    })
+  }
+
+
+  check_api(curr_url).then((api_data) => {
+    const { api_status, api_quantity, api_purchasable} = api_data
+    const is_status = ["ComingSoon", "SoldOutOnline", 'NotAvailable'].includes(api_status)
+    const has_quantity = api_quantity > 0
+    const is_purchasable = api_purchasable
+
+    var gpu_type = names[curr_url.split("/")[6]]
+    console.log(gpu_type +  '  -------   ' + api_status)
+
+    if (!(is_status) || has_quantity || is_purchasable) {
       sendEmail(curr_url)
       openBrowser(curr_url)
     }
-    else {
-      intervalManager(true, curr_url, 3000)
-    }
-  })
-  .catch((error) => {
-    console.log(error)
+
     intervalManager(true, curr_url, 3000)
+    
   })
+  // check_page(curr_url)
+
 }
 
 
@@ -182,21 +219,6 @@ async function openBrowser (curr_url) {
   // SIGN IN, BECAREFUL WHEN UNCOMMENTING
   const placeOrder = await page.$('#posElement > section > section.cost-sum-section > button')
   await placeOrder.evaluate( placeOrder => placeOrder.click())
-
- // Paypal
-  // await page.click('#signIn > div > button')
-  // const response = await page.goto("https://www.bestbuy.ca/checkout/?qit=1#/en-ca/payment")
-  // await page.waitForSelector('#payment-submit-btn', { visible: true, timeout: 0 })
-  // await page.click("#payment-submit-btn")
-   // page.waitForNavigation({
-    //   waitUntil: 'networkidle0'
-  // await page.waitForSelector("#root > div > div.x-page-content.container_3Sp8P > div.loader_3thnw > div.loadedContent_2Wp84 > section > div > section > section.cost-sum-section_3pPEp > div.checkoutOptions_1VB1L > div:nth-child(1) > div > div > a")
-  // await page.click("#root > div > div.x-page-content.container_3Sp8P > div.loader_3thnw > div.loadedContent_2Wp84 > section > div > section > section.cost-sum-section_3pPEp > div.checkoutOptions_1VB1L > div:nth-child(1) > div > div > a")
-  // await page.waitForSelector('#payment-submit-btn')
-  // await page.click('#payment-submit-btn')
-  // await page.focus("#root > div > div.x-page-content.container_3Sp8P > div.loader_3thnw > div.loadedContent_2Wp84 > section > div > section > section.cost-sum-section_3pPEp > div:nth-child(3) > div > a")
-  // await page.waitForSelector("#test > button")
-  // await page.click("#test > button")
 }
 
 const sendEmail = async (curr_url) => {
@@ -240,3 +262,21 @@ intervalManager(true, url_3080_ZOTAC_OC, 3000)
 intervalManager(true, url_PS5, 3000)
 
 // intervalManager(true, url_test, 3000)
+
+
+
+
+ // Paypal
+  // await page.click('#signIn > div > button')
+  // const response = await page.goto("https://www.bestbuy.ca/checkout/?qit=1#/en-ca/payment")
+  // await page.waitForSelector('#payment-submit-btn', { visible: true, timeout: 0 })
+  // await page.click("#payment-submit-btn")
+   // page.waitForNavigation({
+    //   waitUntil: 'networkidle0'
+  // await page.waitForSelector("#root > div > div.x-page-content.container_3Sp8P > div.loader_3thnw > div.loadedContent_2Wp84 > section > div > section > section.cost-sum-section_3pPEp > div.checkoutOptions_1VB1L > div:nth-child(1) > div > div > a")
+  // await page.click("#root > div > div.x-page-content.container_3Sp8P > div.loader_3thnw > div.loadedContent_2Wp84 > section > div > section > section.cost-sum-section_3pPEp > div.checkoutOptions_1VB1L > div:nth-child(1) > div > div > a")
+  // await page.waitForSelector('#payment-submit-btn')
+  // await page.click('#payment-submit-btn')
+  // await page.focus("#root > div > div.x-page-content.container_3Sp8P > div.loader_3thnw > div.loadedContent_2Wp84 > section > div > section > section.cost-sum-section_3pPEp > div:nth-child(3) > div > a")
+  // await page.waitForSelector("#test > button")
+  // await page.click("#test > button")
