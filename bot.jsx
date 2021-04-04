@@ -94,15 +94,15 @@ var transporter = nodemailer.createTransport({
      ciphers:'SSLv3'
   }, 
   auth: {
-    user: process.env.EMAIL,
-    pass: process.env.PASSWORD
+    user: process.env.TO_EMAIL,
+    pass: process.env.TO_PASSWORD
   }
 });
 
 
 var mailOptions = {
-  from: process.env.EMAIL,
-  to: process.env.EMAIL,
+  from: process.env.TO_EMAIL,
+  to: process.env.TO_EMAIL,
   subject: 'GPU is in stock',
   text: url_test
 };
@@ -129,7 +129,8 @@ async function checkStatus (curr_url, interval_length) {
   }
 
   function check_api (curr_url) {
-    return axios.get(url_api + 'skus=' + curr_url.split("/")[6]).then(
+    return axios.get(url_api + 'skus=' + curr_url.split("/")[6])
+    .then(
       (response) => {
         var availability_string = JSON.parse(response.data.replace('apiAvailability(', '').replace(');', ""))
         return {
@@ -137,6 +138,11 @@ async function checkStatus (curr_url, interval_length) {
           api_quantity: availability_string.availabilities[0].shipping.quantityRemaining,
           api_purchasable: availability_string.availabilities[0].shipping.purchasable
         }
+      }
+    )
+    .catch(
+      (error) => {
+        console.log(error)
       }
     )
   }
@@ -166,7 +172,8 @@ async function checkStatus (curr_url, interval_length) {
   }
 
 
-  check_api(curr_url).then((api_data) => {
+  check_api(curr_url)
+  .then((api_data) => {
     const { api_status, api_quantity, api_purchasable} = api_data
     const is_status = ["ComingSoon", "SoldOutOnline", 'NotAvailable'].includes(api_status)
     const has_quantity = api_quantity > 0
@@ -175,15 +182,17 @@ async function checkStatus (curr_url, interval_length) {
     var gpu_type = names[curr_url.split("/")[6]]
     console.log(gpu_type +  '  -------   ' + api_status)
 
-    if (!(is_status) || has_quantity || is_purchasable) {
-      sendEmail(curr_url)
+    if (has_quantity) {
+      sendEmail(curr_url, api_quantity)
       openBrowser(curr_url)
     }
     else {
       intervalManager(true, curr_url, interval_length)
     }
-
-
+  })
+  .catch( (error) => {
+    console.log(error)
+    intervalManager(true, curr_url, interval_length)
   })
   // check_page(curr_url)
 
@@ -211,7 +220,7 @@ async function openBrowser (curr_url) {
   await page.goto(url_cart);
   // const response = await page.goto("https://www.bestbuy.ca/checkout/?qit=1#/en-ca/shipping/ON/M2N?expressPaypalCheckout=true");
   const reponse = await page.goto("https://www.bestbuy.ca/identity/global/signin?redirectUrl=https%3A%2F%2Fwww.bestbuy.ca%2Fcheckout%2F%3Fqit%3D1%23%2Fen-ca%2Fshipping%2FON%2FL6W&amp;lang=en-CA&amp;contextId=checkout")
-  await page.type('#username', process.env.EMAIL)
+  await page.type('#username', process.env.TO_EMAIL)
   await page.type('#password', process.env.BESTBUY_PASSWORD)
   const signIn = await page.$('#signIn > div > button')
   await signIn.evaluate( signIn => signIn.click() )
@@ -219,13 +228,13 @@ async function openBrowser (curr_url) {
   await page.type('#cvv', process.env.CVV)
 
   // SIGN IN, BECAREFUL WHEN UNCOMMENTING
-  // const placeOrder = await page.$('#posElement > section > section.cost-sum-section > button')
-  // await placeOrder.evaluate( placeOrder => placeOrder.click())
+  const placeOrder = await page.$('#posElement > section > section.cost-sum-section > button')
+  await placeOrder.evaluate( placeOrder => placeOrder.click())
 }
 
-const sendEmail = async (curr_url) => {
+const sendEmail = async (curr_url, quantity) => {
 
-  mailOptions.subject = names[curr_url.split("/")[6]] + " IS HERE."
+  mailOptions.subject = names[curr_url.split("/")[6]] + " IS HERE. QUANTITY = " + quantity + "."
   mailOptions.text = curr_url; 
   let info = await transporter.sendMail(mailOptions, function(error, info){
     if (error) {
@@ -236,7 +245,7 @@ const sendEmail = async (curr_url) => {
   });
 } 
 
-const interval_length = 2500
+const interval_length = 3000
 
 intervalManager(true, url_3060_ASUS_ROG, interval_length)
 intervalManager(true, url_3060_ASUS_TUF, interval_length)
@@ -265,7 +274,7 @@ intervalManager(true, url_3080_ZOTAC, interval_length)
 intervalManager(true, url_3080_ZOTAC_OC, interval_length)
 intervalManager(true, url_PS5, interval_length)
 
-//intervalManager(true, url_test, interval)
+//intervalManager(true, url_test, interval_length)
 
 
 
